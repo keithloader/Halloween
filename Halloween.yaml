@@ -26,12 +26,8 @@ blueprint:
       selector:
         select:
           options:
-            - label: Orange Pulse
-              value: orange_pulse
             - label: Purple Flash
               value: purple_flash
-            - label: Red Strobe
-              value: red_strobe
             - label: Green Fade
               value: green_fade
             - label: Color Cycle
