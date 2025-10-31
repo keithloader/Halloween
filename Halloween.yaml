@@ -1,0 +1,150 @@
+blueprint:
+  name: Halloween Ring Doorbell Light Trigger
+  description: Turn on Tapo L900 strip lights with Halloween effects when Ring doorbell detects motion
+  domain: automation
+  input:
+    ring_motion_sensor:
+      name: Ring Doorbell Motion Sensor
+      description: The motion sensor entity from your Ring doorbell
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+    
+    tapo_lights:
+      name: Tapo L900 Strip Lights
+      description: Select the Tapo L900 light strips to control
+      selector:
+        entity:
+          domain: light
+          multiple: true
+    
+    halloween_effect:
+      name: Halloween Effect
+      description: Choose the lighting effect to trigger
+      default: orange_pulse
+      selector:
+        select:
+          options:
+            - label: Orange Pulse
+              value: orange_pulse
+            - label: Purple Flash
+              value: purple_flash
+            - label: Red Strobe
+              value: red_strobe
+            - label: Green Fade
+              value: green_fade
+            - label: Color Cycle
+              value: color_cycle
+    
+    light_duration:
+      name: Light Duration
+      description: How long should the lights stay on (in seconds)
+      default: 60
+      selector:
+        number:
+          min: 10
+          max: 300
+          step: 5
+          unit_of_measurement: seconds
+    
+    brightness:
+      name: Brightness
+      description: Brightness level for the lights (0-100%)
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+trigger:
+  - platform: state
+    entity_id: !input ring_motion_sensor
+    to: "on"
+
+action:
+  - choose:
+      # Orange Pulse Effect
+      - conditions:
+          - condition: template
+            value_template: "{{ halloween_effect == 'orange_pulse' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input tapo_lights
+            data:
+              brightness_pct: !input brightness
+              rgb_color: [255, 140, 0]
+              effect: "pulse"
+      
+      # Purple Flash Effect
+      - conditions:
+          - condition: template
+            value_template: "{{ halloween_effect == 'purple_flash' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input tapo_lights
+            data:
+              brightness_pct: !input brightness
+              rgb_color: [128, 0, 128]
+              effect: "flash"
+      
+      # Red Strobe Effect
+      - conditions:
+          - condition: template
+            value_template: "{{ halloween_effect == 'red_strobe' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input tapo_lights
+            data:
+              brightness_pct: !input brightness
+              rgb_color: [255, 0, 0]
+              effect: "strobe"
+      
+      # Green Fade Effect
+      - conditions:
+          - condition: template
+            value_template: "{{ halloween_effect == 'green_fade' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input tapo_lights
+            data:
+              brightness_pct: !input brightness
+              rgb_color: [0, 255, 0]
+              effect: "smooth"
+      
+      # Color Cycle Effect
+      - conditions:
+          - condition: template
+            value_template: "{{ halloween_effect == 'color_cycle' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input tapo_lights
+            data:
+              brightness_pct: !input brightness
+              effect: "rainbow"
+    
+    # Default fallback
+    default:
+      - service: light.turn_on
+        target:
+          entity_id: !input tapo_lights
+        data:
+          brightness_pct: !input brightness
+          rgb_color: [255, 140, 0]
+  
+  # Turn off lights after specified duration
+  - delay:
+      seconds: !input light_duration
+  
+  - service: light.turn_off
+    target:
+      entity_id: !input tapo_lights
+
+mode: restart
